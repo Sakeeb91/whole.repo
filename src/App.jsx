@@ -755,19 +755,24 @@ function TarotModal({ isOpen, onClose, card }) {
 // Tarot Card Component
 function TarotCard({ card, onClick, index }) {
   const [isHovered, setIsHovered] = useState(false)
+  const [videoLoaded, setVideoLoaded] = useState(false)
+  const [videoPlaying, setVideoPlaying] = useState(false)
   const videoRef = useRef(null)
 
   // Play/pause video on hover
   useEffect(() => {
-    if (videoRef.current && card.video) {
+    if (videoRef.current && card.video && videoLoaded) {
       if (isHovered) {
-        videoRef.current.play().catch(() => {})
+        videoRef.current.play()
+          .then(() => setVideoPlaying(true))
+          .catch(() => setVideoPlaying(false))
       } else {
         videoRef.current.pause()
         videoRef.current.currentTime = 0
+        setVideoPlaying(false)
       }
     }
-  }, [isHovered, card.video])
+  }, [isHovered, card.video, videoLoaded])
 
   return (
     <div
@@ -832,14 +837,14 @@ function TarotCard({ card, onClick, index }) {
 
           {/* Illustration Area */}
           <div className="absolute inset-x-6 top-12 bottom-24 rounded-lg overflow-hidden">
-            {/* Static Image (poster) */}
+            {/* Static Image (poster) - only hides when video is actually playing */}
             {card.image && (
               <img
                 src={card.image}
                 alt={`${card.name} tarot illustration`}
-                className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-105 ${card.video ? (isHovered ? 'opacity-0' : 'opacity-100') : ''}`}
+                className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-105 ${videoPlaying ? 'opacity-0' : 'opacity-100'}`}
                 style={{
-                  filter: isHovered && !card.video ? 'brightness(1.1) saturate(1.2)' : 'brightness(0.9)',
+                  filter: isHovered && !videoPlaying ? 'brightness(1.1) saturate(1.2)' : 'brightness(0.9)',
                 }}
               />
             )}
@@ -852,7 +857,10 @@ function TarotCard({ card, onClick, index }) {
                 muted
                 loop
                 playsInline
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+                preload="auto"
+                onCanPlay={() => setVideoLoaded(true)}
+                onError={() => setVideoLoaded(false)}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${videoPlaying ? 'opacity-100' : 'opacity-0'}`}
                 style={{
                   filter: 'brightness(1.1) saturate(1.2)',
                 }}
