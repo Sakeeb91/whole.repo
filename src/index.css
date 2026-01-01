@@ -277,6 +277,35 @@ body {
   animation: fractalPulse 15s ease-in-out infinite;
 }
 
+/* Practice symbol hover animation */
+@keyframes symbolActivate {
+  0% {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1) drop-shadow(0 0 0 transparent);
+  }
+  30% {
+    transform: scale(1.15) rotate(8deg);
+    filter: brightness(1.2) drop-shadow(0 0 12px rgba(201, 168, 76, 0.6));
+  }
+  60% {
+    transform: scale(1.12) rotate(-5deg);
+    filter: brightness(1.15) drop-shadow(0 0 8px rgba(201, 168, 76, 0.5));
+  }
+  100% {
+    transform: scale(1.1) rotate(0deg);
+    filter: brightness(1.1) drop-shadow(0 0 15px rgba(201, 168, 76, 0.4));
+  }
+}
+
+.practice-symbol {
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  will-change: transform, filter;
+}
+
+.group:hover .practice-symbol {
+  animation: symbolActivate 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
 /* Dimensional shift */
 @keyframes dimensionalShift {
   0%, 100% {
@@ -696,4 +725,119 @@ html.lenis, html.lenis body {
 
 .lenis.lenis-scrolling iframe {
   pointer-events: none;
+}
+
+/* ============================================
+   WHOLE CUSTOM CURSOR SYSTEM
+   Chalice-point cursor: directed receptivity
+   ============================================ */
+
+/* Default WHOLE cursor - chalice-point */
+html.whole-cursor,
+html.whole-cursor * {
+  cursor: url('/cursors/chalice-default.svg') 4 2, auto;
+}
+
+/* Pointer/link hover - bowl widens, dot brightens */
+html.whole-cursor a,
+html.whole-cursor button,
+html.whole-cursor [role="button"],
+html.whole-cursor .cursor-pointer,
+html.whole-cursor [data-cursor="pointer"] {
+  cursor: url('/cursors/chalice-pointer.svg') 4 2, pointer;
+}
+
+/* Text selection cursor - I-beam with bowl mark */
+html.whole-cursor input[type="text"],
+html.whole-cursor input[type="email"],
+html.whole-cursor input[type="password"],
+html.whole-cursor input[type="search"],
+html.whole-cursor textarea,
+html.whole-cursor [contenteditable="true"],
+html.whole-cursor .cursor-text,
+html.whole-cursor [data-cursor="text"] {
+  cursor: url('/cursors/chalice-text.svg') 14 14, text;
+}
+
+/* Grab cursor - ring form */
+html.whole-cursor .cursor-grab,
+html.whole-cursor [data-cursor="grab"],
+html.whole-cursor [draggable="true"] {
+  cursor: url('/cursors/chalice-grab.svg') 14 14, grab;
+}
+
+/* Grabbing cursor - compressed ring */
+html.whole-cursor .cursor-grabbing,
+html.whole-cursor [data-cursor="grabbing"],
+html.whole-cursor .cursor-grab:active,
+html.whole-cursor [draggable="true"]:active {
+  cursor: url('/cursors/chalice-grabbing.svg') 14 14, grabbing;
+}
+
+/* Wait/loading cursor - orbiting bead */
+html.whole-cursor .cursor-wait,
+html.whole-cursor [data-cursor="wait"],
+html.whole-cursor [aria-busy="true"] {
+  cursor: url('/cursors/chalice-wait.svg') 14 14, wait;
+}
+
+/* Not allowed state */
+html.whole-cursor .cursor-not-allowed,
+html.whole-cursor [data-cursor="not-allowed"],
+html.whole-cursor [disabled],
+html.whole-cursor [aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+/* Cursor state transition */
+html.whole-cursor * {
+  transition: cursor 150ms ease;
+}
+
+/* Cursor toggle button styling */
+.cursor-toggle {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
+  padding: 8px 16px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--cream);
+  background: rgba(10, 10, 15, 0.8);
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  border-radius: 999px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0.4;
+  transition: all 0.3s ease;
+}
+
+.cursor-toggle:hover {
+  opacity: 1;
+  border-color: rgba(201, 168, 76, 0.5);
+  box-shadow: 0 0 20px rgba(201, 168, 76, 0.15);
+}
+
+.cursor-toggle.active {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+/* Hide toggle on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .cursor-toggle {
+    display: none;
+  }
+}
+
+/* Accessibility: respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  html.whole-cursor .cursor-wait,
+  html.whole-cursor [data-cursor="wait"],
+  html.whole-cursor [aria-busy="true"] {
+    cursor: wait;
+  }
 }

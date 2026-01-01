@@ -1,6 +1,9 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback, createContext, useContext } from 'react'
 import Lenis from 'lenis'
 import './index.css'
+
+// Cursor Context for global cursor state
+const CursorContext = createContext({ isCustomCursor: true, setIsCustomCursor: () => {} })
 
 // Initialize Lenis smooth scroll
 function useLenis() {
@@ -119,6 +122,53 @@ function LoadingScreen({ onComplete }) {
         {progress < 100 ? 'Awakening...' : 'Enter'}
       </p>
     </div>
+  )
+}
+
+// Custom Cursor Hook - manages cursor state and applies to html element
+function useCustomCursor() {
+  const [isCustomCursor, setIsCustomCursor] = useState(() => {
+    // Check localStorage, default to true (enabled)
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('whole-cursor')
+      return saved !== 'false' // Default to true unless explicitly disabled
+    }
+    return true
+  })
+
+  useEffect(() => {
+    const html = document.documentElement
+    if (isCustomCursor) {
+      html.classList.add('whole-cursor')
+    } else {
+      html.classList.remove('whole-cursor')
+    }
+    localStorage.setItem('whole-cursor', isCustomCursor.toString())
+  }, [isCustomCursor])
+
+  return [isCustomCursor, setIsCustomCursor]
+}
+
+// Cursor Toggle Component
+function CursorToggle() {
+  const { isCustomCursor, setIsCustomCursor } = useContext(CursorContext)
+  const [isTouchDevice, setIsTouchDevice] = useState(false)
+
+  useEffect(() => {
+    setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0)
+  }, [])
+
+  if (isTouchDevice) return null
+
+  return (
+    <button
+      onClick={() => setIsCustomCursor(!isCustomCursor)}
+      className={`cursor-toggle ${isCustomCursor ? 'active' : ''}`}
+      aria-label={isCustomCursor ? 'Switch to system cursor' : 'Switch to WHOLE cursor'}
+      title={isCustomCursor ? 'Using WHOLE cursor' : 'Using system cursor'}
+    >
+      {isCustomCursor ? '◈ Cursor' : '○ System'}
+    </button>
   )
 }
 
@@ -1635,7 +1685,7 @@ function PracticesSection() {
                 </div>
 
                 <div
-                  className="text-2xl md:text-4xl text-gold/70 mb-3 md:mb-6 group-hover:text-gold group-hover:scale-110 transition-all duration-500 inline-block"
+                  className="practice-symbol text-2xl md:text-4xl text-gold/70 mb-3 md:mb-6 group-hover:text-gold inline-block"
                   style={{ animation: `fractalPulse ${8 + i}s ease-in-out infinite` }}
                 >
                   {practice.icon}
@@ -1879,6 +1929,7 @@ function Footer() {
 // Main App with loading screen and enhanced features
 function App() {
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isCustomCursor, setIsCustomCursor] = useCustomCursor()
 
   // Initialize Lenis smooth scroll
   useLenis()
@@ -1888,38 +1939,43 @@ function App() {
   }, [])
 
   return (
-    <div className="relative bg-void min-h-screen grain-overlay">
-      {/* Loading Screen */}
-      {!isLoaded && <LoadingScreen onComplete={handleLoadComplete} />}
+    <CursorContext.Provider value={{ isCustomCursor, setIsCustomCursor }}>
+      <div className="relative bg-void min-h-screen grain-overlay">
+        {/* Loading Screen */}
+        {!isLoaded && <LoadingScreen onComplete={handleLoadComplete} />}
 
-      {/* Scroll Progress Indicator */}
-      <ScrollProgress />
+        {/* Scroll Progress Indicator */}
+        <ScrollProgress />
 
-      {/* Cursor Glow Effect with Stardust Trail (desktop only) */}
-      <CursorGlow />
+        {/* Cursor Glow Effect with Stardust Trail (desktop only) */}
+        <CursorGlow />
 
-      {/* Background Particles */}
-      <ParticleField />
+        {/* Background Particles */}
+        <ParticleField />
 
-      {/* Navigation */}
-      <Navigation />
+        {/* Navigation */}
+        <Navigation />
 
-      {/* Mobile Thumb Zone Navigation */}
-      <MobileThumbOrb />
+        {/* Mobile Thumb Zone Navigation */}
+        <MobileThumbOrb />
 
-      {/* Main Content */}
-      <main role="main">
-        <HeroSection />
-        <ValuesSection />
-        <PhilosophySection />
-        <PracticesSection />
-        <ScriptureSection />
-        <CommunitySection />
-      </main>
+        {/* Cursor Toggle Button */}
+        <CursorToggle />
 
-      {/* Footer */}
-      <Footer />
-    </div>
+        {/* Main Content */}
+        <main role="main">
+          <HeroSection />
+          <ValuesSection />
+          <PhilosophySection />
+          <PracticesSection />
+          <ScriptureSection />
+          <CommunitySection />
+        </main>
+
+        {/* Footer */}
+        <Footer />
+      </div>
+    </CursorContext.Provider>
   )
 }
 
