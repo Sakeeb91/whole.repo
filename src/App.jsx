@@ -633,6 +633,150 @@ function TarotCard({ card, onClick, index }) {
   )
 }
 
+// Practice Modal Component with Video
+function PracticeModal({ isOpen, onClose, practice }) {
+  const videoRef = useRef(null)
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+      // Auto-play video when modal opens
+      if (videoRef.current) {
+        videoRef.current.play().catch(() => {})
+      }
+    } else {
+      document.body.style.overflow = ''
+      // Pause video when modal closes
+      if (videoRef.current) {
+        videoRef.current.pause()
+        videoRef.current.currentTime = 0
+      }
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    if (isOpen) {
+      window.addEventListener('keydown', handleEscape)
+      return () => window.removeEventListener('keydown', handleEscape)
+    }
+  }, [isOpen, onClose])
+
+  if (!isOpen || !practice) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="practice-modal-title"
+      data-lenis-prevent
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-void/98 backdrop-blur-xl" />
+
+      {/* Modal Content */}
+      <div
+        className="relative z-10 w-full max-w-5xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-2xl bg-void-deep border border-gold/20 shadow-[0_0_100px_-20px_rgba(201,168,76,0.3)]"
+        onClick={(e) => e.stopPropagation()}
+        data-lenis-prevent
+      >
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-20 w-10 h-10 flex items-center justify-center rounded-full glass-dimensional text-cream/60 hover:text-gold transition-colors"
+          aria-label="Close modal"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* Video Container */}
+        <div className="relative w-full aspect-video bg-black rounded-t-2xl overflow-hidden">
+          <video
+            ref={videoRef}
+            src={practice.video}
+            className="w-full h-full object-cover"
+            loop
+            muted
+            playsInline
+            controls
+          />
+          {/* Vignette overlay */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              boxShadow: 'inset 0 0 100px 20px rgba(0, 0, 0, 0.5)',
+            }}
+          />
+        </div>
+
+        {/* Content */}
+        <div className="p-8">
+          {/* Header */}
+          <div className="flex items-center gap-4 mb-6">
+            <div
+              className="text-4xl"
+              style={{ animation: 'fractalPulse 6s ease-in-out infinite' }}
+            >
+              {practice.icon}
+            </div>
+            <div>
+              <span className="inline-block px-3 py-1 text-xs tracking-widest uppercase text-gold/80 glass-dimensional rounded-full mb-2">
+                Practice
+              </span>
+              <h2 id="practice-modal-title" className="font-display text-3xl md:text-4xl text-cream">
+                {practice.title}
+              </h2>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent mb-6" />
+
+          {/* Description */}
+          <p className="font-body text-lg text-cream/70 leading-relaxed mb-8">
+            {practice.fullDescription}
+          </p>
+
+          {/* Benefits */}
+          {practice.benefits && (
+            <div className="mb-8">
+              <h3 className="font-display text-xl text-gold mb-4 flex items-center gap-3">
+                <span className="w-8 h-px bg-gold/50" />
+                Benefits
+              </h3>
+              <ul className="grid md:grid-cols-2 gap-3">
+                {practice.benefits.map((benefit, i) => (
+                  <li key={i} className="flex items-start gap-3 font-body text-cream/60">
+                    <span className="text-gold mt-1">◈</span>
+                    {benefit}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* How to Begin */}
+          {practice.howToBegin && (
+            <div className="p-6 rounded-xl bg-gold/5 border border-gold/10">
+              <h3 className="font-display text-lg text-gold mb-3">How to Begin</h3>
+              <p className="font-body text-cream/60">{practice.howToBegin}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Scroll Progress Indicator
 function ScrollProgress() {
   const [progress, setProgress] = useState(0)
@@ -1350,15 +1494,107 @@ function PhilosophySection() {
   )
 }
 
-// Practices Section with scroll reveal
+// Practices Section with Video Modals
 function PracticesSection() {
+  const [selectedPractice, setSelectedPractice] = useState(null)
+
   const practices = [
-    { icon: '◉', title: 'Meditation', description: 'Mindfulness practices expanding awareness inward toward the Pure Consciousness Event.' },
-    { icon: '◈', title: 'Contemplation', description: 'Death contemplation and loving-kindness meditation expanding awareness toward Resonant At-Onement.' },
-    { icon: '◇', title: 'Active Imagination', description: 'Dream analysis and Jungian active imagination for shadow integration and individuation.' },
-    { icon: '○', title: 'Movement', description: 'Dance, Tai Chi, and natural movement practices that facilitate flow states.' },
-    { icon: '◎', title: 'Community', description: 'Regular gatherings, shared meals, and circling practices for distributed cognition.' },
-    { icon: '◐', title: 'Artistic Expression', description: 'Art as the highest task — disclosing beauty and generative power through symbolic expression.' },
+    {
+      icon: '◉',
+      title: 'Meditation',
+      description: 'Mindfulness practices expanding awareness inward toward the Pure Consciousness Event.',
+      video: '/practices/meditation.mp4',
+      fullDescription: 'Meditation is the foundational practice of WHOLE — the systematic cultivation of attention and awareness. Through practices ranging from focused attention (samatha) to open awareness (vipassana), we expand consciousness inward toward what mystics call the Pure Consciousness Event: awareness aware of itself, prior to all content.',
+      benefits: [
+        'Develops sustained attention and meta-awareness',
+        'Reduces reactivity to thoughts and emotions',
+        'Cultivates equanimity and inner peace',
+        'Opens access to non-ordinary states of consciousness',
+        'Builds foundation for all other practices',
+        'Increases neuroplasticity and cognitive flexibility'
+      ],
+      howToBegin: 'Start with 10 minutes daily of breath awareness. Sit comfortably, close your eyes, and simply notice the sensations of breathing. When the mind wanders, gently return attention to the breath. Consistency matters more than duration.'
+    },
+    {
+      icon: '◈',
+      title: 'Contemplation',
+      description: 'Death contemplation and loving-kindness meditation expanding awareness toward Resonant At-Onement.',
+      video: '/practices/contemplation.mp4',
+      fullDescription: 'Contemplation extends meditation outward toward existential themes and relational awareness. Death contemplation (maranasati) dissolves the illusion of permanence and awakens urgency for authentic living. Loving-kindness meditation (metta) expands the heart toward all beings, cultivating what WHOLE calls Resonant At-Onement — the felt sense of interconnection with all life.',
+      benefits: [
+        'Deepens appreciation for the preciousness of life',
+        'Dissolves petty concerns and ego attachments',
+        'Cultivates compassion and loving-kindness',
+        'Expands sense of self to include others',
+        'Prepares consciousness for death and transformation',
+        'Heals relational wounds and opens the heart'
+      ],
+      howToBegin: 'Begin with loving-kindness: silently repeat phrases like "May I be happy, may I be healthy, may I be at peace" while feeling the intention. Gradually extend these wishes to loved ones, neutral people, difficult people, and all beings.'
+    },
+    {
+      icon: '◇',
+      title: 'Active Imagination',
+      description: 'Dream analysis and Jungian active imagination for shadow integration and individuation.',
+      video: '/practices/imagination.mp4',
+      fullDescription: 'Active Imagination is Jung\'s method for conscious dialogue with the unconscious. Through dream analysis, creative visualization, and symbolic engagement, we encounter the autonomous figures of the psyche — shadows, anima/animus, and archetypal energies. This practice is essential for individuation: the lifelong process of integrating unconscious contents into conscious wholeness.',
+      benefits: [
+        'Integrates shadow aspects of personality',
+        'Accesses wisdom of the unconscious mind',
+        'Resolves internal conflicts and complexes',
+        'Develops relationship with archetypal energies',
+        'Enhances creativity and symbolic thinking',
+        'Advances the individuation process'
+      ],
+      howToBegin: 'Keep a dream journal beside your bed. Upon waking, write down any dreams before they fade. Later, engage with dream images through writing, art, or dialogue — asking figures what they want or represent. Let them speak in their own voice.'
+    },
+    {
+      icon: '○',
+      title: 'Movement',
+      description: 'Dance, Tai Chi, and natural movement practices that facilitate flow states.',
+      video: '/practices/movement.mp4',
+      fullDescription: 'Movement practices honor the body as the temple of consciousness. Through dance, Tai Chi, yoga, martial arts, and natural movement, we cultivate embodied presence and access flow states — the optimal experience where action and awareness merge. WHOLE emphasizes organic, expressive movement over rigid forms, trusting the body\'s innate wisdom.',
+      benefits: [
+        'Integrates body and mind into unified experience',
+        'Releases stored tension and trauma',
+        'Cultivates flow states and peak experiences',
+        'Develops proprioception and body awareness',
+        'Expresses emotions through embodied action',
+        'Builds vitality and physical health'
+      ],
+      howToBegin: 'Put on music that moves you and let your body respond without choreography. Close your eyes and trust impulses. Move slowly, then faster. Follow what feels good. There is no wrong way — only authentic expression.'
+    },
+    {
+      icon: '◎',
+      title: 'Community',
+      description: 'Regular gatherings, shared meals, and circling practices for distributed cognition.',
+      video: '/practices/community.mp4',
+      fullDescription: 'Community practices recognize that wisdom is distributed across connected minds. Through regular gatherings, shared meals, circling (authentic relating practices), and collective rituals, we create containers for mutual transformation. The community becomes a living organism of distributed cognition, where each member\'s growth catalyzes the whole.',
+      benefits: [
+        'Provides mirrors for self-understanding',
+        'Creates accountability for practice',
+        'Enables distributed cognition and collective wisdom',
+        'Satisfies fundamental need for belonging',
+        'Amplifies individual growth through resonance',
+        'Builds support network for life\'s challenges'
+      ],
+      howToBegin: 'Seek or create a small group committed to growth. Meet regularly — weekly if possible. Practice authentic sharing: speak from direct experience, listen without fixing, ask genuine questions. Let the container deepen over time.'
+    },
+    {
+      icon: '◐',
+      title: 'Artistic Expression',
+      description: 'Art as the highest task — disclosing beauty and generative power through symbolic expression.',
+      video: '/practices/artistic.mp4',
+      fullDescription: 'Artistic Expression is the highest task according to WHOLE — the act of bringing forth beauty and meaning from the depths of being. Art is not mere decoration but theophany: the disclosure of sacred reality through symbol and form. Every act of genuine creation participates in the cosmic creativity that generates worlds.',
+      benefits: [
+        'Channels unconscious contents into form',
+        'Cultivates generative, creative power',
+        'Discloses beauty and sacred meaning',
+        'Develops symbolic and metaphoric thinking',
+        'Provides vehicle for self-expression',
+        'Contributes to culture and collective meaning'
+      ],
+      howToBegin: 'Choose any medium that calls to you — writing, drawing, music, movement, crafting. Create without judgment or goal. Let the work emerge from within rather than imposing from without. Share your creations with trusted others.'
+    },
   ]
 
   return (
@@ -1383,9 +1619,21 @@ function PracticesSection() {
             <RevealOnScroll key={practice.title} delay={i * 80}>
               <div
                 className="group p-4 md:p-8 rounded-xl glass-dimensional hover-dimensional prism-card h-full cursor-pointer"
-                role="article"
+                role="button"
                 tabIndex={0}
+                onClick={() => setSelectedPractice(practice)}
+                onKeyDown={(e) => e.key === 'Enter' && setSelectedPractice(practice)}
+                aria-label={`Learn more about ${practice.title}`}
               >
+                {/* Video preview indicator */}
+                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="w-8 h-8 rounded-full glass-dimensional flex items-center justify-center">
+                    <svg className="w-4 h-4 text-gold" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                </div>
+
                 <div
                   className="text-2xl md:text-4xl text-gold/70 mb-3 md:mb-6 group-hover:text-gold group-hover:scale-110 transition-all duration-500 inline-block"
                   style={{ animation: `fractalPulse ${8 + i}s ease-in-out infinite` }}
@@ -1394,11 +1642,31 @@ function PracticesSection() {
                 </div>
                 <h3 className="font-display text-base md:text-xl text-cream mb-2 md:mb-3 group-hover:text-alchemical-gold transition-colors duration-500">{practice.title}</h3>
                 <p className="font-body text-cream/50 text-xs md:text-sm leading-relaxed group-hover:text-cream/70 transition-colors duration-500 hidden md:block">{practice.description}</p>
+
+                {/* Click hint */}
+                <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 hidden md:flex items-center gap-2">
+                  <span className="text-xs font-display tracking-widest text-gold uppercase">Watch</span>
+                  <div className="h-[1px] w-6 bg-gold" />
+                </div>
               </div>
             </RevealOnScroll>
           ))}
         </div>
+
+        {/* Hint text */}
+        <RevealOnScroll delay={600}>
+          <p className="text-center mt-8 text-cream/30 text-sm font-body">
+            Click a practice to view its meditation video
+          </p>
+        </RevealOnScroll>
       </div>
+
+      {/* Practice Modal */}
+      <PracticeModal
+        isOpen={!!selectedPractice}
+        onClose={() => setSelectedPractice(null)}
+        practice={selectedPractice}
+      />
     </section>
   )
 }
