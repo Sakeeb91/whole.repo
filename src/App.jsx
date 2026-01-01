@@ -1,5 +1,29 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import Lenis from 'lenis'
 import './index.css'
+
+// Initialize Lenis smooth scroll
+function useLenis() {
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 2,
+    })
+
+    function raf(time) {
+      lenis.raf(time)
+      requestAnimationFrame(raf)
+    }
+    requestAnimationFrame(raf)
+
+    return () => lenis.destroy()
+  }, [])
+}
 
 // Custom hook for Intersection Observer (scroll reveal animations)
 function useInView(options = {}) {
@@ -98,15 +122,35 @@ function LoadingScreen({ onComplete }) {
   )
 }
 
-// Cursor Glow Effect Component
+// Cursor Glow Effect Component with Stardust Trail
 function CursorGlow() {
   const [position, setPosition] = useState({ x: -100, y: -100 })
   const [isVisible, setIsVisible] = useState(false)
+  const [isTouchDevice, setIsTouchDevice] = useState(false)
+  const trailRef = useRef([])
+  const lastPositionRef = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
+    setIsTouchDevice('ontouchstart' in window)
+  }, [])
+
+  useEffect(() => {
+    if (isTouchDevice) return
+
     const handleMouseMove = (e) => {
       setPosition({ x: e.clientX, y: e.clientY })
       setIsVisible(true)
+
+      // Create stardust particles on movement
+      const distance = Math.hypot(
+        e.clientX - lastPositionRef.current.x,
+        e.clientY - lastPositionRef.current.y
+      )
+
+      if (distance > 15) {
+        lastPositionRef.current = { x: e.clientX, y: e.clientY }
+        createStardustParticle(e.clientX, e.clientY)
+      }
     }
 
     const handleMouseLeave = () => setIsVisible(false)
@@ -118,12 +162,21 @@ function CursorGlow() {
       window.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseleave', handleMouseLeave)
     }
-  }, [])
+  }, [isTouchDevice])
 
-  // Don't render on touch devices
-  if (typeof window !== 'undefined' && 'ontouchstart' in window) {
-    return null
+  const createStardustParticle = (x, y) => {
+    const particle = document.createElement('div')
+    particle.className = 'stardust-particle'
+    particle.style.left = `${x + (Math.random() - 0.5) * 10}px`
+    particle.style.top = `${y + (Math.random() - 0.5) * 10}px`
+    document.body.appendChild(particle)
+
+    setTimeout(() => {
+      particle.remove()
+    }, 1000)
   }
+
+  if (isTouchDevice) return null
 
   return (
     <div
@@ -138,12 +191,148 @@ function CursorGlow() {
       <div
         className="w-96 h-96 rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(201, 168, 76, 0.08) 0%, transparent 60%)',
+          background: 'radial-gradient(circle, rgba(201, 168, 76, 0.1) 0%, rgba(201, 168, 76, 0.03) 40%, transparent 60%)',
           filter: 'blur(30px)',
+        }}
+      />
+      {/* Inner bright core */}
+      <div
+        className="absolute top-1/2 left-1/2 w-4 h-4 -translate-x-1/2 -translate-y-1/2 rounded-full"
+        style={{
+          background: 'radial-gradient(circle, rgba(252, 246, 186, 0.6) 0%, transparent 70%)',
+          filter: 'blur(2px)',
         }}
       />
     </div>
   )
+}
+
+// Mobile Thumb Zone Navigation Orb
+function MobileThumbOrb() {
+  const [isOpen, setIsOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  if (!isMobile) return null
+
+  const navItems = ['Values', 'Philosophy', 'Practices', 'Scripture', 'Community']
+
+  const handleNavClick = (item) => {
+    const element = document.getElementById(item.toLowerCase())
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    setIsOpen(false)
+    // Haptic feedback
+    if (navigator.vibrate) {
+      navigator.vibrate(5)
+    }
+  }
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className={`fixed inset-0 bg-void/80 backdrop-blur-sm z-40 transition-opacity duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsOpen(false)}
+      />
+
+      {/* Navigation Menu */}
+      <div
+        className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ${
+          isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-75 pointer-events-none'
+        }`}
+      >
+        <div className="flex flex-col items-center gap-3">
+          {navItems.map((item, i) => (
+            <button
+              key={item}
+              onClick={() => handleNavClick(item)}
+              className="px-6 py-3 glass-dimensional rounded-full text-cream/80 hover:text-gold font-body text-sm transition-all duration-300"
+              style={{
+                transitionDelay: isOpen ? `${i * 50}ms` : '0ms',
+                transform: isOpen ? 'translateY(0)' : 'translateY(20px)',
+              }}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* The Orb */}
+      <button
+        onClick={() => {
+          setIsOpen(!isOpen)
+          if (navigator.vibrate) navigator.vibrate(5)
+        }}
+        className="thumb-orb"
+        aria-label="Open navigation"
+        aria-expanded={isOpen}
+      >
+        <svg
+          className={`w-6 h-6 text-gold transition-transform duration-300 ${isOpen ? 'rotate-45' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          {isOpen ? (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+          ) : (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+          )}
+        </svg>
+      </button>
+    </>
+  )
+}
+
+// Text Decoder Effect Component
+function DecodingText({ text, isVisible, className = '' }) {
+  const [displayText, setDisplayText] = useState('')
+  const [isDecoding, setIsDecoding] = useState(false)
+  const chars = 'ΦΨΩαβγδεζηθλμνξπρστφχψω◊◈◇○●□■△▽☉☽★'
+
+  useEffect(() => {
+    if (!isVisible || isDecoding) return
+
+    setIsDecoding(true)
+    let iteration = 0
+    const maxIterations = text.length * 3
+
+    const interval = setInterval(() => {
+      setDisplayText(
+        text
+          .split('')
+          .map((char, index) => {
+            if (char === ' ') return ' '
+            if (index < iteration / 3) return text[index]
+            return chars[Math.floor(Math.random() * chars.length)]
+          })
+          .join('')
+      )
+
+      if (iteration >= maxIterations) {
+        clearInterval(interval)
+        setDisplayText(text)
+        setIsDecoding(false)
+      }
+
+      iteration += 1
+    }, 30)
+
+    return () => clearInterval(interval)
+  }, [isVisible, text])
+
+  return <span className={`decode-text ${className}`}>{displayText || text}</span>
 }
 
 // Scroll Progress Indicator
@@ -185,7 +374,7 @@ function RevealOnScroll({ children, delay = 0, className = '' }) {
         transitionDelay: `${delay}ms`,
       }}
     >
-      {children}
+      {typeof children === 'function' ? children({ isInView }) : children}
     </div>
   )
 }
@@ -378,26 +567,25 @@ function ParticleField() {
   )
 }
 
-// Navigation with mobile menu and active section tracking
+// Navigation with Floating Island pattern (2025 design)
 function Navigation() {
   const [scrolled, setScrolled] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('')
 
-  const navItems = ['Values', 'Philosophy', 'Practices', 'Scripture', 'Community']
+  const navItems = ['Values', 'Philosophy', 'Practices', 'Scripture']
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50)
 
       // Determine active section
-      const sections = navItems.map((item) => document.getElementById(item.toLowerCase()))
+      const sections = [...navItems, 'Community'].map((item) => document.getElementById(item.toLowerCase()))
       const scrollPosition = window.scrollY + 150
 
       for (let i = sections.length - 1; i >= 0; i--) {
         const section = sections[i]
         if (section && section.offsetTop <= scrollPosition) {
-          setActiveSection(navItems[i].toLowerCase())
+          setActiveSection([...navItems, 'Community'][i].toLowerCase())
           break
         }
       }
@@ -411,122 +599,75 @@ function Navigation() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Close mobile menu when clicking outside
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [mobileMenuOpen])
-
   const handleNavClick = (e, item) => {
     e.preventDefault()
     const element = document.getElementById(item.toLowerCase())
     if (element) {
-      const offset = 80 // Account for fixed nav
+      const offset = 80
       const elementPosition = element.offsetTop - offset
       window.scrollTo({ top: elementPosition, behavior: 'smooth' })
     }
-    setMobileMenuOpen(false)
   }
 
   return (
-    <>
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          scrolled ? 'glass-dimensional py-4' : 'py-6'
-        }`}
-        role="navigation"
-        aria-label="Main navigation"
-      >
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <a
-            href="#"
-            className="font-display text-2xl font-semibold text-holographic focus:outline-none focus-visible:ring-2 focus-visible:ring-gold rounded"
-            aria-label="WHOLE - Return to top"
-            onClick={(e) => {
-              e.preventDefault()
-              window.scrollTo({ top: 0, behavior: 'smooth' })
-            }}
-          >
-            W
-          </a>
-          <div className="hidden md:flex items-center gap-8">
-            {navItems.map((item) => (
-              <a
-                key={item}
-                href={`#${item.toLowerCase()}`}
-                onClick={(e) => handleNavClick(e, item)}
-                className={`font-body text-sm transition-colors animated-underline ${
-                  activeSection === item.toLowerCase()
-                    ? 'text-gold'
-                    : 'text-cream/60 hover:text-gold'
-                }`}
-                aria-current={activeSection === item.toLowerCase() ? 'true' : undefined}
-              >
-                {item}
-              </a>
-            ))}
-          </div>
+    <nav
+      className={`fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] md:w-auto max-w-fit transition-all duration-500 ${
+        scrolled ? 'opacity-100 translate-y-0' : 'opacity-90'
+      }`}
+      role="navigation"
+      aria-label="Main navigation"
+    >
+      <div className="px-2 py-2 rounded-full glass-premium nav-island flex items-center gap-1">
+        {/* Logo / Home */}
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault()
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }}
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-void/50 text-gold font-display font-bold text-xl hover:bg-gold hover:text-void transition-colors duration-300"
+          aria-label="WHOLE - Return to top"
+        >
+          W
+        </a>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden text-gold p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold rounded"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={mobileMenuOpen}
-          >
-            <svg className="w-6 h-6 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {mobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
-        </div>
-      </nav>
+        {/* Divider */}
+        <div className="w-[1px] h-6 bg-white/10 mx-1 md:mx-2 hidden md:block" />
 
-      {/* Mobile Menu Overlay */}
-      <div
-        className={`fixed inset-0 z-40 md:hidden transition-all duration-500 ${
-          mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
-      >
-        {/* Backdrop */}
-        <div
-          className="absolute inset-0 bg-void/95 backdrop-blur-xl"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-
-        {/* Menu Content */}
-        <div className="relative h-full flex flex-col items-center justify-center gap-8">
-          {navItems.map((item, i) => (
+        {/* Nav Items - Hidden on mobile, shown on desktop */}
+        <div className="hidden md:flex items-center gap-1">
+          {navItems.map((item) => (
             <a
               key={item}
               href={`#${item.toLowerCase()}`}
               onClick={(e) => handleNavClick(e, item)}
-              className={`font-display text-3xl transition-all duration-500 ${
+              className={`relative px-4 lg:px-5 py-2 rounded-full text-sm font-body transition-all duration-300 group overflow-hidden ${
                 activeSection === item.toLowerCase()
-                  ? 'text-gold glow-gold'
-                  : 'text-cream/70 hover:text-gold'
+                  ? 'text-gold bg-gold/10'
+                  : 'text-cream/70 hover:text-white hover:bg-white/5'
               }`}
-              style={{
-                transform: mobileMenuOpen ? 'translateY(0)' : 'translateY(20px)',
-                opacity: mobileMenuOpen ? 1 : 0,
-                transitionDelay: `${i * 50}ms`,
-              }}
+              aria-current={activeSection === item.toLowerCase() ? 'true' : undefined}
             >
-              {item}
+              <span className="relative z-10">{item}</span>
+
+              {/* Hover Spotlight Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
             </a>
           ))}
         </div>
+
+        {/* CTA Button */}
+        <div className="hidden md:flex pl-1 md:pl-2">
+          <a
+            href="#community"
+            onClick={(e) => handleNavClick(e, 'community')}
+            className="px-4 py-2 rounded-full bg-gold text-void font-display font-semibold text-xs uppercase tracking-wider hover:bg-cream transition-colors shadow-[0_0_20px_-5px_rgba(201,168,76,0.5)]"
+          >
+            Join
+          </a>
+        </div>
       </div>
-    </>
+    </nav>
   )
 }
 
@@ -566,7 +707,7 @@ function HeroSection() {
         </div>
 
         <h1 className="font-display text-7xl md:text-9xl font-light tracking-wide mb-6 animate-fade-up opacity-0" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
-          <span className="text-gradient-gold glow-gold-intense">WHOLE</span>
+          <span className="text-alchemical-gold breathe-text inline-block glow-gold-intense">WHOLE</span>
         </h1>
 
         <div className="flex flex-wrap justify-center gap-3 mb-12 animate-fade-up opacity-0" style={{ animationDelay: '0.6s', animationFillMode: 'forwards' }}>
@@ -593,12 +734,24 @@ function HeroSection() {
         <div className="animate-fade-up opacity-0" style={{ animationDelay: '1s', animationFillMode: 'forwards' }}>
           <a
             href="#values"
-            className="inline-flex items-center gap-2 px-8 py-4 glass-dimensional rounded-full text-cream font-body hover-dimensional"
+            className="group relative inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-void overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95"
           >
-            Begin the Journey
-            <svg className="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
+            {/* Gradient Border Background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#C9A84C] via-[#F4E4BC] to-[#C9A84C] opacity-100" />
+
+            {/* Inner Dark Surface */}
+            <div className="absolute inset-[1px] rounded-full bg-[#0a0a0f] transition-colors group-hover:bg-[#121016]" />
+
+            {/* Content */}
+            <span className="relative z-10 font-display text-base md:text-lg font-medium text-gold group-hover:text-cream transition-colors flex items-center gap-2">
+              Begin the Journey
+              <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-y-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 5v14M5 12l7 7 7-7" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
+
+            {/* Glow Ring */}
+            <div className="absolute inset-0 rounded-full ring-1 ring-white/10 group-hover:ring-gold/50 transition-all duration-500" />
           </a>
         </div>
       </div>
@@ -626,42 +779,73 @@ function ValuesSection() {
 
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         <RevealOnScroll>
-          <div className="text-center mb-20">
-            <h2 id="values-heading" className="font-display text-5xl md:text-6xl font-light text-cream mb-6">
-              The Five <span className="text-holographic">Values</span>
+          <div className="text-center mb-12 md:mb-20">
+            <h2 id="values-heading" className="font-display text-4xl md:text-5xl lg:text-6xl font-light text-cream mb-4 md:mb-6">
+              The Five <span className="text-alchemical-gold">Values</span>
             </h2>
-            <p className="font-body text-lg text-cream/50 max-w-2xl mx-auto">
+            <p className="font-body text-base md:text-lg text-cream/50 max-w-2xl mx-auto px-4">
               Each value manifests through virtues of Wisdom — together forming a holographic constellation where each part contains the whole.
             </p>
           </div>
         </RevealOnScroll>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {values.map((value, index) => (
             <RevealOnScroll
               key={value.name}
               delay={index * 100}
               className={index === 4 ? 'md:col-span-2 lg:col-span-1' : ''}
             >
-              <div
-                className="group relative p-8 rounded-2xl glass-dimensional hover-dimensional h-full cursor-pointer"
-                role="article"
-                tabIndex={0}
-              >
-                {/* Animated background glow on hover */}
-                <div
-                  className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"
-                  style={{
-                    background: 'radial-gradient(circle at 50% 50%, rgba(201, 168, 76, 0.1) 0%, transparent 70%)',
-                  }}
-                />
-                <div className="absolute top-4 right-4 font-display text-7xl font-bold text-gold/5 group-hover:text-gold/20 transition-all duration-700 group-hover:scale-110">
-                  {value.letter}
+              {({ isInView }) => (
+                <div className="group relative h-full w-full" role="article" tabIndex={0}>
+                  {/* Animated Conic Border Gradient */}
+                  <div
+                    className="absolute -inset-[1px] rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm animate-border-spin"
+                    style={{
+                      background: 'conic-gradient(from var(--angle, 0deg) at 50% 50%, transparent 0%, transparent 70%, #C9A84C 85%, transparent 100%)',
+                    }}
+                  />
+
+                  {/* Main Card Container */}
+                  <div className="relative h-full rounded-2xl bg-[#0a0a0f] p-[1px] overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-2 group-hover:scale-[1.01]">
+
+                    {/* Inner Content Surface */}
+                    <div className="relative h-full rounded-2xl bg-void/90 p-6 md:p-8 flex flex-col overflow-hidden min-h-[280px]">
+
+                      {/* Ambient Noise Texture */}
+                      <div className="absolute inset-0 bg-noise opacity-30 pointer-events-none mix-blend-overlay" />
+
+                      {/* Top Light Leak Effect */}
+                      <div className="absolute -top-24 -right-24 w-48 h-48 bg-gold/10 blur-[80px] rounded-full group-hover:bg-gold/25 transition-colors duration-700" />
+
+                      {/* Large Letter with Ink Trap depth effect */}
+                      <div className="absolute -right-2 -top-2 font-display text-[7rem] md:text-[8rem] leading-none font-bold text-transparent bg-clip-text bg-gradient-to-b from-white/[0.03] to-transparent select-none transition-all duration-700 group-hover:scale-110 group-hover:from-gold/10">
+                        {value.letter}
+                      </div>
+
+                      {/* Content */}
+                      <div className="relative z-10 flex-1 flex flex-col">
+                        <h3 className="font-display text-xl md:text-2xl text-cream mb-3 md:mb-4 mt-6 md:mt-8 inline-flex items-center gap-3">
+                          <span className="w-6 md:w-8 h-[1px] bg-gold/50 group-hover:w-10 md:group-hover:w-12 transition-all duration-500" />
+                          <span className="group-hover:text-gold transition-colors duration-300">
+                            <DecodingText text={value.name} isVisible={isInView} />
+                          </span>
+                        </h3>
+
+                        <p className="font-body text-sm md:text-base text-cream/60 leading-relaxed group-hover:text-cream/80 transition-colors duration-500">
+                          {value.description}
+                        </p>
+                      </div>
+
+                      {/* Bottom Interactive Indicator */}
+                      <div className="mt-auto pt-6 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
+                        <span className="text-xs font-display tracking-widest text-gold uppercase">Discover</span>
+                        <div className="h-[1px] w-8 bg-gold" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="absolute inset-0 rounded-2xl metatron-cube opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                <h3 className="font-display text-2xl text-cream mb-4 relative z-10 group-hover:text-gold transition-colors duration-500">{value.name}</h3>
-                <p className="font-body text-cream/60 leading-relaxed relative z-10 group-hover:text-cream/80 transition-colors duration-500">{value.description}</p>
-              </div>
+              )}
             </RevealOnScroll>
           ))}
         </div>
@@ -684,8 +868,8 @@ function PhilosophySection() {
               <span className="inline-block px-3 py-1 text-xs tracking-widest uppercase text-gold/80 glass-dimensional rounded-full mb-6">
                 Holographic Structure
               </span>
-              <h2 id="philosophy-heading" className="font-display text-4xl md:text-5xl font-light text-cream mb-8 leading-tight">
-                A Living Memeplex of <span className="text-holographic">Infinite Depth</span>
+              <h2 id="philosophy-heading" className="font-display text-3xl md:text-4xl lg:text-5xl font-light text-cream mb-6 md:mb-8 leading-tight">
+                A Living Memeplex of <span className="text-alchemical-gold">Infinite Depth</span>
               </h2>
               <div className="space-y-6 font-body text-cream/60">
                 <p>
@@ -775,32 +959,32 @@ function PracticesSection() {
 
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         <RevealOnScroll>
-          <div className="text-center mb-20">
-            <h2 id="practices-heading" className="font-display text-5xl md:text-6xl font-light text-cream mb-6">
-              Ecology of <span className="text-holographic">Practices</span>
+          <div className="text-center mb-10 md:mb-20">
+            <h2 id="practices-heading" className="font-display text-4xl md:text-5xl lg:text-6xl font-light text-cream mb-4 md:mb-6">
+              Ecology of <span className="text-alchemical-gold">Practices</span>
             </h2>
-            <p className="font-body text-lg text-cream/50 max-w-2xl mx-auto">
+            <p className="font-body text-base md:text-lg text-cream/50 max-w-2xl mx-auto px-4">
               Everything that affords self-transformation and the cultivation of wisdom is a potential tool for furthering the path.
             </p>
           </div>
         </RevealOnScroll>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
           {practices.map((practice, i) => (
-            <RevealOnScroll key={practice.title} delay={i * 100}>
+            <RevealOnScroll key={practice.title} delay={i * 80}>
               <div
-                className="group p-8 rounded-xl glass-dimensional hover-dimensional h-full cursor-pointer"
+                className="group p-4 md:p-8 rounded-xl glass-dimensional hover-dimensional prism-card h-full cursor-pointer"
                 role="article"
                 tabIndex={0}
               >
                 <div
-                  className="text-4xl text-gold/70 mb-6 group-hover:text-gold group-hover:scale-110 transition-all duration-500 inline-block"
+                  className="text-2xl md:text-4xl text-gold/70 mb-3 md:mb-6 group-hover:text-gold group-hover:scale-110 transition-all duration-500 inline-block"
                   style={{ animation: `fractalPulse ${8 + i}s ease-in-out infinite` }}
                 >
                   {practice.icon}
                 </div>
-                <h3 className="font-display text-xl text-cream mb-3 group-hover:text-gold transition-colors duration-500">{practice.title}</h3>
-                <p className="font-body text-cream/50 text-sm leading-relaxed group-hover:text-cream/70 transition-colors duration-500">{practice.description}</p>
+                <h3 className="font-display text-base md:text-xl text-cream mb-2 md:mb-3 group-hover:text-alchemical-gold transition-colors duration-500">{practice.title}</h3>
+                <p className="font-body text-cream/50 text-xs md:text-sm leading-relaxed group-hover:text-cream/70 transition-colors duration-500 hidden md:block">{practice.description}</p>
               </div>
             </RevealOnScroll>
           ))}
@@ -843,8 +1027,8 @@ function ScriptureSection() {
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
         <RevealOnScroll>
-          <h2 id="scripture-heading" className="font-display text-5xl md:text-6xl font-light text-cream mb-16">
-            From the <span className="text-holographic">Scripture</span>
+          <h2 id="scripture-heading" className="font-display text-4xl md:text-5xl lg:text-6xl font-light text-cream mb-10 md:mb-16">
+            From the <span className="text-alchemical-gold">Scripture</span>
           </h2>
         </RevealOnScroll>
 
@@ -853,15 +1037,15 @@ function ScriptureSection() {
             {quotes.map((quote, index) => (
               <blockquote
                 key={quote.number}
-                className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-1000 ${
+                className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-1000 px-4 ${
                   index === activeQuote ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8 pointer-events-none'
                 }`}
                 aria-hidden={index !== activeQuote}
               >
-                <p className="font-display text-2xl md:text-3xl text-cream/90 italic leading-relaxed mb-8">
-                  "{quote.text}"
+                <p className="font-display text-xl md:text-2xl lg:text-3xl text-cream/90 italic leading-relaxed mb-8 drop-cap text-left max-w-3xl">
+                  {quote.text}
                 </p>
-                <footer className="text-gold/60 font-body">— § {quote.number}</footer>
+                <footer className="text-gold/60 font-body text-sm md:text-base">— § {quote.number}</footer>
               </blockquote>
             ))}
           </div>
@@ -899,8 +1083,8 @@ function CommunitySection() {
             <FractalGeometry className="w-full h-full" layers={2} />
           </div>
 
-          <h2 id="community-heading" className="font-display text-5xl md:text-6xl font-light text-cream mb-6">
-            Join the <span className="text-holographic">Becoming</span>
+          <h2 id="community-heading" className="font-display text-4xl md:text-5xl lg:text-6xl font-light text-cream mb-4 md:mb-6">
+            Join the <span className="text-alchemical-gold">Becoming</span>
           </h2>
 
           <p className="font-body text-lg text-cream/50 mb-12 max-w-2xl mx-auto">
@@ -910,23 +1094,42 @@ function CommunitySection() {
 
         <RevealOnScroll delay={200}>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {/* Primary CTA - Alchemical Core Button */}
             <a
               href="https://www.facebook.com/uberrheogenic/"
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-gold to-gold-bright text-void-deep font-body font-medium rounded-full hover:scale-105 transition-all duration-300 depth-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-void"
+              className="group relative inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95"
             >
-              Contact the Inaugural Chalice
-              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
+              {/* Animated Gradient Background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-[#C9A84C] via-[#F4E4BC] to-[#C9A84C] bg-[length:200%_100%] animate-shimmer" />
+
+              {/* Content */}
+              <span className="relative z-10 font-display text-base font-semibold text-void flex items-center gap-2">
+                Contact the Inaugural Chalice
+                <svg className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </span>
+
+              {/* Glow Effect */}
+              <div className="absolute inset-0 rounded-full shadow-[0_0_30px_-5px_rgba(201,168,76,0.5)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </a>
 
+            {/* Secondary CTA - Ethereal Glass Button */}
             <a
               href="#"
-              className="inline-flex items-center justify-center gap-3 px-8 py-4 glass-dimensional text-cream font-body rounded-full hover-dimensional focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+              className="group relative px-8 py-4 rounded-full overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95"
             >
-              Read the Prototype
+              {/* Glass Background */}
+              <div className="absolute inset-0 glass-premium transition-colors group-hover:bg-white/5" />
+              <div className="absolute inset-0 bg-noise opacity-10" />
+
+              {/* Content */}
+              <span className="relative z-10 font-body text-cream group-hover:text-gold transition-colors flex items-center gap-2">
+                Read the Prototype
+                <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+              </span>
             </a>
           </div>
         </RevealOnScroll>
@@ -1000,19 +1203,22 @@ function Footer() {
 function App() {
   const [isLoaded, setIsLoaded] = useState(false)
 
+  // Initialize Lenis smooth scroll
+  useLenis()
+
   const handleLoadComplete = useCallback(() => {
     setIsLoaded(true)
   }, [])
 
   return (
-    <div className="relative bg-void min-h-screen">
+    <div className="relative bg-void min-h-screen grain-overlay">
       {/* Loading Screen */}
       {!isLoaded && <LoadingScreen onComplete={handleLoadComplete} />}
 
       {/* Scroll Progress Indicator */}
       <ScrollProgress />
 
-      {/* Cursor Glow Effect (desktop only) */}
+      {/* Cursor Glow Effect with Stardust Trail (desktop only) */}
       <CursorGlow />
 
       {/* Background Particles */}
@@ -1020,6 +1226,9 @@ function App() {
 
       {/* Navigation */}
       <Navigation />
+
+      {/* Mobile Thumb Zone Navigation */}
+      <MobileThumbOrb />
 
       {/* Main Content */}
       <main role="main">
