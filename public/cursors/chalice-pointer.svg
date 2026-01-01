@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
+  <!-- Enhanced glow for hover state -->
+  <defs>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <radialGradient id="seedGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f4e4bc"/>
+      <stop offset="100%" stop-color="#c9a84c"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Shadow/outline for contrast -->
+  <path d="M4 2 L4 20 L8 16 L12 22 L15 20 L11 14 L17 14 L4 2Z"
+        fill="#0a0a0f" stroke="#0a0a0f" stroke-width="3" stroke-linejoin="round"/>
+
+  <!-- Main pointer shape - brighter on hover -->
+  <path d="M4 2 L4 20 L8 16 L12 22 L15 20 L11 14 L17 14 L4 2Z"
+        fill="#f5f0e8" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round" filter="url(#glow)"/>
+
+  <!-- Widened bowl/arc - opens on hover -->
+  <path d="M5 7 Q12 4 16 11"
+        stroke="#d4af37" stroke-width="1.2" fill="none" opacity="0.8"/>
+
+  <!-- Brightened seed dot with glow -->
+  <circle cx="8" cy="10" r="2" fill="url(#seedGlow)" opacity="1">
+    <animate attributeName="opacity" values="0.8;1;0.8" dur="2s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Subtle halo around seed -->
+  <circle cx="8" cy="10" r="4" fill="none" stroke="#c9a84c" stroke-width="0.5" opacity="0.3"/>
+</svg>

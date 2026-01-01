@@ -1,9 +1,214 @@
 import { useState, useEffect, useRef, useMemo, useCallback, createContext, useContext } from 'react'
 import Lenis from 'lenis'
+import { motion } from 'motion/react'
+import { Brain, Heart, Sparkles, Activity, Users, Palette } from 'lucide-react'
 import './index.css'
 
 // Cursor Context for global cursor state
 const CursorContext = createContext({ isCustomCursor: true, setIsCustomCursor: () => {} })
+
+// Animated Practice Icons
+const AnimatedPracticeIcon = ({ icon: Icon, isHovered }) => {
+  const iconVariants = {
+    idle: {
+      scale: 1,
+      rotate: 0,
+      filter: 'drop-shadow(0 0 0px rgba(201, 168, 76, 0))',
+    },
+    hover: {
+      scale: 1.1,
+      rotate: [0, -5, 5, 0],
+      filter: 'drop-shadow(0 0 12px rgba(201, 168, 76, 0.6))',
+      transition: {
+        rotate: {
+          duration: 0.5,
+          ease: 'easeInOut',
+        },
+        scale: {
+          duration: 0.3,
+          ease: [0.23, 1, 0.32, 1],
+        },
+        filter: {
+          duration: 0.3,
+        },
+      },
+    },
+  }
+
+  return (
+    <motion.div
+      variants={iconVariants}
+      initial="idle"
+      animate={isHovered ? 'hover' : 'idle'}
+      className="text-gold/70 group-hover:text-gold"
+    >
+      <Icon size={36} strokeWidth={1.5} className="md:w-12 md:h-12" />
+    </motion.div>
+  )
+}
+
+// Specific animated icons with unique behaviors
+const MeditationIcon = ({ isHovered }) => (
+  <motion.div
+    animate={isHovered ? {
+      scale: [1, 1.1, 1.05],
+      filter: ['drop-shadow(0 0 0px rgba(201, 168, 76, 0))', 'drop-shadow(0 0 15px rgba(201, 168, 76, 0.7))', 'drop-shadow(0 0 10px rgba(201, 168, 76, 0.5))'],
+    } : { scale: 1, filter: 'drop-shadow(0 0 0px rgba(201, 168, 76, 0))' }}
+    transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+    className="text-gold/70 group-hover:text-gold"
+  >
+    <motion.div
+      animate={isHovered ? { opacity: [0.7, 1, 0.8, 1] } : { opacity: 0.7 }}
+      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+    >
+      <Brain size={36} strokeWidth={1.5} className="md:w-12 md:h-12" />
+    </motion.div>
+  </motion.div>
+)
+
+const ContemplationIcon = ({ isHovered }) => (
+  <motion.div
+    animate={isHovered ? {
+      scale: [1, 1.15, 1.1],
+      filter: 'drop-shadow(0 0 12px rgba(201, 168, 76, 0.6))',
+    } : { scale: 1, filter: 'drop-shadow(0 0 0px rgba(201, 168, 76, 0))' }}
+    transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+    className="text-gold/70 group-hover:text-gold"
+  >
+    <motion.div
+      animate={isHovered ? { scale: [1, 1.1, 0.95, 1.05, 1] } : { scale: 1 }}
+      transition={{ duration: 0.8, ease: 'easeInOut' }}
+    >
+      <Heart size={36} strokeWidth={1.5} className="md:w-12 md:h-12" />
+    </motion.div>
+  </motion.div>
+)
+
+const ImaginationIcon = ({ isHovered }) => (
+  <motion.div
+    animate={isHovered ? {
+      scale: 1.1,
+      filter: 'drop-shadow(0 0 15px rgba(201, 168, 76, 0.7))',
+    } : { scale: 1, filter: 'drop-shadow(0 0 0px rgba(201, 168, 76, 0))' }}
+    transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+    className="text-gold/70 group-hover:text-gold"
+  >
+    <motion.div
+      animate={isHovered ? {
+        rotate: [0, 10, -10, 5, 0],
+        opacity: [0.8, 1, 0.9, 1, 0.85],
+      } : { rotate: 0, opacity: 0.7 }}
+      transition={{ duration: 1.2, ease: 'easeInOut' }}
+    >
+      <Sparkles size={36} strokeWidth={1.5} className="md:w-12 md:h-12" />
+    </motion.div>
+  </motion.div>
+)
+
+const MovementIcon = ({ isHovered }) => (
+  <motion.div
+    animate={isHovered ? {
+      scale: 1.1,
+      filter: 'drop-shadow(0 0 12px rgba(201, 168, 76, 0.6))',
+    } : { scale: 1, filter: 'drop-shadow(0 0 0px rgba(201, 168, 76, 0))' }}
+    transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+    className="text-gold/70 group-hover:text-gold"
+  >
+    <motion.div
+      animate={isHovered ? {
+        y: [0, -3, 3, -2, 0],
+        scaleY: [1, 1.1, 0.95, 1.05, 1],
+      } : { y: 0, scaleY: 1 }}
+      transition={{ duration: 0.8, ease: 'easeInOut' }}
+    >
+      <Activity size={36} strokeWidth={1.5} className="md:w-12 md:h-12" />
+    </motion.div>
+  </motion.div>
+)
+
+const CommunityIcon = ({ isHovered }) => (
+  <motion.div
+    animate={isHovered ? {
+      scale: 1.1,
+      filter: 'drop-shadow(0 0 12px rgba(201, 168, 76, 0.6))',
+    } : { scale: 1, filter: 'drop-shadow(0 0 0px rgba(201, 168, 76, 0))' }}
+    transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+    className="text-gold/70 group-hover:text-gold"
+  >
+    <motion.div
+      animate={isHovered ? {
+        x: [0, -2, 2, 0],
+      } : { x: 0 }}
+      transition={{ duration: 0.5, ease: 'easeInOut' }}
+    >
+      <Users size={36} strokeWidth={1.5} className="md:w-12 md:h-12" />
+    </motion.div>
+  </motion.div>
+)
+
+const ArtisticIcon = ({ isHovered }) => (
+  <motion.div
+    animate={isHovered ? {
+      scale: 1.1,
+      rotate: [0, -8, 8, 0],
+      filter: 'drop-shadow(0 0 15px rgba(201, 168, 76, 0.7))',
+    } : { scale: 1, rotate: 0, filter: 'drop-shadow(0 0 0px rgba(201, 168, 76, 0))' }}
+    transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+    className="text-gold/70 group-hover:text-gold"
+  >
+    <Palette size={36} strokeWidth={1.5} className="md:w-12 md:h-12" />
+  </motion.div>
+)
+
+// Map practice titles to their icons
+const practiceIcons = {
+  'Meditation': MeditationIcon,
+  'Contemplation': ContemplationIcon,
+  'Active Imagination': ImaginationIcon,
+  'Movement': MovementIcon,
+  'Community': CommunityIcon,
+  'Artistic Expression': ArtisticIcon,
+}
+
+// Practice Card with animated icon
+function PracticeCard({ practice, onClick }) {
+  const [isHovered, setIsHovered] = useState(false)
+  const IconComponent = practiceIcons[practice.title]
+
+  return (
+    <div
+      className="group p-4 md:p-8 rounded-xl glass-dimensional hover-dimensional prism-card h-full cursor-pointer"
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => e.key === 'Enter' && onClick()}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      aria-label={`Learn more about ${practice.title}`}
+    >
+      {/* Video preview indicator */}
+      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="w-8 h-8 rounded-full glass-dimensional flex items-center justify-center">
+          <svg className="w-4 h-4 text-gold" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </div>
+      </div>
+
+      <div className="mb-3 md:mb-6">
+        {IconComponent && <IconComponent isHovered={isHovered} />}
+      </div>
+      <h3 className="font-display text-base md:text-xl text-cream mb-2 md:mb-3 group-hover:text-alchemical-gold transition-colors duration-500">{practice.title}</h3>
+      <p className="font-body text-cream/50 text-xs md:text-sm leading-relaxed group-hover:text-cream/70 transition-colors duration-500 hidden md:block">{practice.description}</p>
+
+      {/* Click hint */}
+      <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 hidden md:flex items-center gap-2">
+        <span className="text-xs font-display tracking-widest text-gold uppercase">Watch</span>
+        <div className="h-[1px] w-6 bg-gold" />
+      </div>
+    </div>
+  )
+}
 
 // Initialize Lenis smooth scroll
 function useLenis() {
@@ -1667,38 +1872,10 @@ function PracticesSection() {
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
           {practices.map((practice, i) => (
             <RevealOnScroll key={practice.title} delay={i * 80}>
-              <div
-                className="group p-4 md:p-8 rounded-xl glass-dimensional hover-dimensional prism-card h-full cursor-pointer"
-                role="button"
-                tabIndex={0}
+              <PracticeCard
+                practice={practice}
                 onClick={() => setSelectedPractice(practice)}
-                onKeyDown={(e) => e.key === 'Enter' && setSelectedPractice(practice)}
-                aria-label={`Learn more about ${practice.title}`}
-              >
-                {/* Video preview indicator */}
-                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="w-8 h-8 rounded-full glass-dimensional flex items-center justify-center">
-                    <svg className="w-4 h-4 text-gold" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                </div>
-
-                <div
-                  className="practice-symbol text-2xl md:text-4xl text-gold/70 mb-3 md:mb-6 group-hover:text-gold inline-block"
-                  style={{ animation: `fractalPulse ${8 + i}s ease-in-out infinite` }}
-                >
-                  {practice.icon}
-                </div>
-                <h3 className="font-display text-base md:text-xl text-cream mb-2 md:mb-3 group-hover:text-alchemical-gold transition-colors duration-500">{practice.title}</h3>
-                <p className="font-body text-cream/50 text-xs md:text-sm leading-relaxed group-hover:text-cream/70 transition-colors duration-500 hidden md:block">{practice.description}</p>
-
-                {/* Click hint */}
-                <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 hidden md:flex items-center gap-2">
-                  <span className="text-xs font-display tracking-widest text-gold uppercase">Watch</span>
-                  <div className="h-[1px] w-6 bg-gold" />
-                </div>
-              </div>
+              />
             </RevealOnScroll>
           ))}
         </div>

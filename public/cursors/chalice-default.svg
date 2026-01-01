@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
+  <!-- Outer glow for visibility -->
+  <defs>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="0.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Shadow/outline for contrast -->
+  <path d="M4 2 L4 20 L8 16 L12 22 L15 20 L11 14 L17 14 L4 2Z"
+        fill="#0a0a0f" stroke="#0a0a0f" stroke-width="3" stroke-linejoin="round"/>
+
+  <!-- Main pointer shape - triangular point -->
+  <path d="M4 2 L4 20 L8 16 L12 22 L15 20 L11 14 L17 14 L4 2Z"
+        fill="#f5f0e8" stroke="#c9a84c" stroke-width="1.5" stroke-linejoin="round" filter="url(#glow)"/>
+
+  <!-- Bowl/arc behind - the receiving vessel -->
+  <path d="M6 8 Q10 6 14 10"
+        stroke="#c9a84c" stroke-width="1" fill="none" opacity="0.6"/>
+
+  <!-- Seed dot - the entelechy hint -->
+  <circle cx="8" cy="10" r="1.5" fill="#c9a84c" opacity="0.8"/>
+</svg>

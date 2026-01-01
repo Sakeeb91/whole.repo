@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
+  <!-- Wait/loading cursor - orbiting bead around bowl rim -->
+  <defs>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Shadow -->
+  <circle cx="14" cy="14" r="10" fill="none" stroke="#0a0a0f" stroke-width="4"/>
+
+  <!-- Bowl rim - the orbit path -->
+  <circle cx="14" cy="14" r="10" fill="none" stroke="#f5f0e8" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- Inner bowl -->
+  <circle cx="14" cy="14" r="6" fill="none" stroke="#c9a84c" stroke-width="0.8" opacity="0.3"/>
+
+  <!-- Center point - stationary -->
+  <circle cx="14" cy="14" r="2" fill="#c9a84c" opacity="0.5"/>
+
+  <!-- Orbiting bead - single, slow -->
+  <circle cx="14" cy="4" r="2.5" fill="#d4af37" filter="url(#glow)">
+    <animateTransform
+      attributeName="transform"
+      type="rotate"
+      from="0 14 14"
+      to="360 14 14"
+      dur="3s"
+      repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Trail hint -->
+  <circle cx="14" cy="4" r="1.5" fill="#c9a84c" opacity="0.3">
+    <animateTransform
+      attributeName="transform"
+      type="rotate"
+      from="-30 14 14"
+      to="330 14 14"
+      dur="3s"
+      repeatCount="indefinite"/>
+  </circle>
+</svg>
