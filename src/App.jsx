@@ -245,8 +245,8 @@ function HeroSection() {
           </span>
         </div>
 
-        <h1 className="font-display text-7xl md:text-9xl font-light tracking-wide mb-6 animate-fade-up opacity-0 dimensional-shift" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
-          <span className="text-holographic glow-gold-intense">WHOLE</span>
+        <h1 className="font-display text-7xl md:text-9xl font-light tracking-wide mb-6 animate-fade-up opacity-0" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
+          <span className="text-gradient-gold glow-gold-intense">WHOLE</span>
         </h1>
 
         <div className="flex flex-wrap justify-center gap-3 mb-12 animate-fade-up opacity-0" style={{ animationDelay: '0.6s', animationFillMode: 'forwards' }}>

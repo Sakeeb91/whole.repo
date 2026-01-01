@@ -84,6 +84,7 @@ body {
 
   /* Holographic text effect */
   .text-holographic {
+    color: #c9a84c;
     background: linear-gradient(
       135deg,
       #c9a84c 0%,
@@ -98,6 +99,15 @@ body {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     animation: holographicShift 8s ease-in-out infinite;
+  }
+
+  /* Fallback for browsers that don't support background-clip: text */
+  @supports not (background-clip: text) {
+    .text-holographic {
+      background: none;
+      -webkit-text-fill-color: #c9a84c;
+      color: #c9a84c;
+    }
   }
 
   /* Glows */
