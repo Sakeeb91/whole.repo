@@ -362,19 +362,21 @@ function TarotModal({ isOpen, onClose, card }) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
+      data-lenis-prevent
     >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-void/95 backdrop-blur-xl" />
 
       {/* Modal Content */}
       <div
-        className="relative z-10 w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl bg-gradient-to-b from-void-deep via-void to-void-deep border border-gold/20 shadow-[0_0_100px_-20px_rgba(201,168,76,0.3)]"
+        className="relative z-10 w-full max-w-4xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-2xl bg-gradient-to-b from-void-deep via-void to-void-deep border border-gold/20 shadow-[0_0_100px_-20px_rgba(201,168,76,0.3)]"
         onClick={(e) => e.stopPropagation()}
+        data-lenis-prevent
       >
         {/* Close Button */}
         <button
