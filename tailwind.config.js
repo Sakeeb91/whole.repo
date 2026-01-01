@@ -35,8 +35,9 @@ export default {
         },
       },
       fontFamily: {
-        display: ['Cormorant Garamond', 'Georgia', 'serif'],
+        display: ['Marcellus', 'Georgia', 'serif'],
         body: ['Crimson Pro', 'Georgia', 'serif'],
+        accent: ['Cormorant Garamond', 'Georgia', 'serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
       animation: {
