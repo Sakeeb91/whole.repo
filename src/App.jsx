@@ -335,6 +335,302 @@ function DecodingText({ text, isVisible, className = '' }) {
   return <span className={`decode-text ${className}`}>{displayText || text}</span>
 }
 
+// Modal Component for Tarot Cards
+function TarotModal({ isOpen, onClose, card }) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    if (isOpen) {
+      window.addEventListener('keydown', handleEscape)
+      return () => window.removeEventListener('keydown', handleEscape)
+    }
+  }, [isOpen, onClose])
+
+  if (!isOpen || !card) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-void/95 backdrop-blur-xl" />
+
+      {/* Modal Content */}
+      <div
+        className="relative z-10 w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl bg-gradient-to-b from-void-deep via-void to-void-deep border border-gold/20 shadow-[0_0_100px_-20px_rgba(201,168,76,0.3)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-20 w-10 h-10 flex items-center justify-center rounded-full glass-dimensional text-cream/60 hover:text-gold transition-colors"
+          aria-label="Close modal"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* Header with Tarot Card Preview */}
+        <div className="relative p-8 pb-0">
+          <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+            {/* Mini Tarot Card */}
+            <div className="w-48 h-72 flex-shrink-0 rounded-xl overflow-hidden border-2 border-gold/30 shadow-[0_0_30px_-10px_rgba(201,168,76,0.4)]">
+              <div className="relative w-full h-full bg-gradient-to-b from-indigo-deep via-void to-indigo-deep">
+                {/* Card Image */}
+                {card.image && (
+                  <img
+                    src={card.image}
+                    alt={`${card.name} tarot illustration`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                )}
+                {/* Overlay with name */}
+                <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent" />
+                <div className="absolute bottom-0 inset-x-0 p-4 text-center">
+                  <div className="font-display text-xl text-gold">{card.name}</div>
+                  <div className="font-display text-2xl text-cream/30 mt-1">{card.letter}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Title and Subtitle */}
+            <div className="flex-1 text-center md:text-left">
+              <span className="inline-block px-3 py-1 text-xs tracking-widest uppercase text-gold/80 glass-dimensional rounded-full mb-4">
+                {card.arcana}
+              </span>
+              <h2 id="modal-title" className="font-display text-4xl md:text-5xl text-cream mb-4">
+                <span className="text-alchemical-gold">{card.letter}</span> — {card.name}
+              </h2>
+              <p className="font-body text-lg text-cream/60 italic mb-6">{card.subtitle}</p>
+              <div className="flex flex-wrap gap-2">
+                {card.keywords.map((keyword, i) => (
+                  <span key={i} className="px-3 py-1 text-xs font-body text-gold/70 glass-dimensional rounded-full">
+                    {keyword}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="mx-8 my-8 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+
+        {/* Content Sections */}
+        <div className="px-8 pb-8 space-y-8">
+          {/* Main Description */}
+          <div>
+            <h3 className="font-display text-xl text-gold mb-4 flex items-center gap-3">
+              <span className="w-8 h-px bg-gold/50" />
+              Essence
+            </h3>
+            <p className="font-body text-cream/70 leading-relaxed">{card.essence}</p>
+          </div>
+
+          {/* Virtues */}
+          <div>
+            <h3 className="font-display text-xl text-gold mb-4 flex items-center gap-3">
+              <span className="w-8 h-px bg-gold/50" />
+              Associated Virtues
+            </h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              {card.virtues.map((virtue, i) => (
+                <div key={i} className="p-4 rounded-lg glass-dimensional">
+                  <h4 className="font-display text-cream mb-2">{virtue.name}</h4>
+                  <p className="font-body text-sm text-cream/50">{virtue.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quote */}
+          <div className="p-6 rounded-xl bg-gold/5 border border-gold/10">
+            <blockquote className="font-display text-lg text-cream/80 italic text-center">
+              "{card.quote.text}"
+            </blockquote>
+            <p className="text-center text-gold/60 text-sm mt-3">— {card.quote.source}</p>
+          </div>
+
+          {/* Practices */}
+          <div>
+            <h3 className="font-display text-xl text-gold mb-4 flex items-center gap-3">
+              <span className="w-8 h-px bg-gold/50" />
+              Cultivating {card.name}
+            </h3>
+            <ul className="space-y-3">
+              {card.practices.map((practice, i) => (
+                <li key={i} className="flex items-start gap-3 font-body text-cream/60">
+                  <span className="text-gold mt-1">◈</span>
+                  {practice}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Shadow Aspect */}
+          <div className="p-6 rounded-xl bg-void-deep border border-gold/5">
+            <h3 className="font-display text-lg text-cream/80 mb-3">The Shadow of {card.name}</h3>
+            <p className="font-body text-sm text-cream/50">{card.shadow}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Tarot Card Component
+function TarotCard({ card, onClick, index }) {
+  const [isHovered, setIsHovered] = useState(false)
+
+  return (
+    <div
+      className="group relative cursor-pointer perspective-1000"
+      onClick={onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onClick()}
+      aria-label={`View ${card.name} tarot card`}
+    >
+      {/* Card Container with 3D effect */}
+      <div
+        className="relative w-full aspect-[2/3] transform-style-3d transition-all duration-700 ease-out"
+        style={{
+          transform: isHovered ? 'rotateY(5deg) rotateX(-5deg) translateY(-10px) scale(1.02)' : 'rotateY(0) rotateX(0) translateY(0) scale(1)',
+        }}
+      >
+        {/* Glow Effect */}
+        <div
+          className="absolute -inset-4 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-2xl"
+          style={{
+            background: `radial-gradient(ellipse at center, ${card.glowColor}40 0%, transparent 70%)`,
+          }}
+        />
+
+        {/* Animated Border */}
+        <div
+          className="absolute -inset-[2px] rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{
+            background: `conic-gradient(from var(--angle, ${index * 72}deg) at 50% 50%, transparent 0%, ${card.glowColor} 10%, transparent 20%)`,
+            animation: 'border-spin 4s linear infinite',
+          }}
+        />
+
+        {/* Main Card */}
+        <div className="relative h-full rounded-2xl overflow-hidden bg-gradient-to-b from-[#0d0d14] via-[#0a0a0f] to-[#050508] border border-gold/20 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)]">
+          {/* Decorative Border Frame */}
+          <div className="absolute inset-3 rounded-xl border border-gold/10 pointer-events-none" />
+          <div className="absolute inset-5 rounded-lg border border-gold/5 pointer-events-none" />
+
+          {/* Top Ornament */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-6 flex items-center justify-center">
+            <svg viewBox="0 0 100 30" className="w-full h-full text-gold/30">
+              <path d="M10 15 L30 5 L50 15 L70 5 L90 15" stroke="currentColor" fill="none" strokeWidth="0.5" />
+              <circle cx="50" cy="15" r="3" fill="currentColor" />
+              <circle cx="30" cy="10" r="1.5" fill="currentColor" />
+              <circle cx="70" cy="10" r="1.5" fill="currentColor" />
+            </svg>
+          </div>
+
+          {/* Card Number */}
+          <div className="absolute top-6 left-6 font-display text-sm text-gold/40">
+            {String(index + 1).padStart(2, '0')}
+          </div>
+
+          {/* Letter Numeral */}
+          <div className="absolute top-6 right-6 font-display text-lg text-gold/30">
+            {['I', 'II', 'III', 'IV', 'V'][index]}
+          </div>
+
+          {/* Illustration Area */}
+          <div className="absolute inset-x-6 top-12 bottom-24 rounded-lg overflow-hidden">
+            {/* Generated Image */}
+            {card.image && (
+              <img
+                src={card.image}
+                alt={`${card.name} tarot illustration`}
+                className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
+                style={{
+                  filter: isHovered ? 'brightness(1.1) saturate(1.2)' : 'brightness(0.9)',
+                }}
+              />
+            )}
+
+            {/* Mystical Overlay */}
+            <div
+              className="absolute inset-0 opacity-40 group-hover:opacity-20 transition-opacity duration-700"
+              style={{
+                background: `radial-gradient(ellipse at center, transparent 30%, ${card.glowColor}20 70%, #0a0a0f 100%)`,
+              }}
+            />
+
+            {/* Vignette */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                boxShadow: 'inset 0 0 40px 10px rgba(10, 10, 15, 0.8)',
+              }}
+            />
+          </div>
+
+          {/* Title Banner */}
+          <div className="absolute bottom-16 inset-x-0 text-center">
+            <div className="relative inline-block">
+              {/* Banner Background */}
+              <svg className="absolute -inset-x-8 -inset-y-2 w-[calc(100%+4rem)] h-[calc(100%+1rem)]" viewBox="0 0 200 50" preserveAspectRatio="none">
+                <path d="M10 25 L30 10 L170 10 L190 25 L170 40 L30 40 Z" fill="rgba(201, 168, 76, 0.1)" stroke="rgba(201, 168, 76, 0.3)" strokeWidth="0.5" />
+              </svg>
+              <h3 className="relative font-display text-xl md:text-2xl text-gold tracking-wider px-4">
+                {card.name}
+              </h3>
+            </div>
+          </div>
+
+          {/* Letter Badge */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+            <div className="w-10 h-10 rounded-full border border-gold/30 flex items-center justify-center bg-void/50">
+              <span className="font-display text-lg text-gold/80">{card.letter}</span>
+            </div>
+          </div>
+
+          {/* Corner Ornaments */}
+          {['top-3 left-3', 'top-3 right-3 scale-x-[-1]', 'bottom-3 left-3 scale-y-[-1]', 'bottom-3 right-3 scale-[-1]'].map((pos, i) => (
+            <div key={i} className={`absolute ${pos} w-6 h-6 text-gold/20`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5">
+                <path d="M3 3 L12 3 M3 3 L3 12" />
+                <circle cx="3" cy="3" r="1.5" fill="currentColor" />
+              </svg>
+            </div>
+          ))}
+
+          {/* Hover Instruction */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 text-xs text-cream/30 font-body">
+            Click to reveal
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Scroll Progress Indicator
 function ScrollProgress() {
   const [progress, setProgress] = useState(0)
@@ -761,14 +1057,159 @@ function HeroSection() {
   )
 }
 
-// Values Section - Holographic cards with scroll reveal
+// Values Section - Tarot Cards with Modals
 function ValuesSection() {
-  const values = [
-    { letter: 'W', name: 'Wonder', description: 'Philosophy begins in wonder — the capacity for curiosity, astonishment, and appreciation of beauty and complexity. It invokes humility before the vast mystery of existence.' },
-    { letter: 'H', name: 'Honesty', description: 'Truthfulness, transparency, and sincerity in all dealings — with others and oneself. Authenticity that inoculates against ideology and promotes introspection.' },
-    { letter: 'O', name: 'Orthobiosis', description: 'Right living aimed at optimal health — not merely freedom from ailments, but the practice of aligning oneself with the patterns of Life itself.' },
-    { letter: 'L', name: 'Life', description: 'The singular intrinsic value — self-potentiating, self-actualizing creativity. Life as will to power, embracing amor fati and Dionysian affirmation.' },
-    { letter: 'E', name: 'Entelechy', description: 'The active actualization of potential — maturation, character development, self-mastery. The endless process of individuation and self-overcoming.' },
+  const [selectedCard, setSelectedCard] = useState(null)
+
+  const tarotCards = [
+    {
+      letter: 'W',
+      name: 'Wonder',
+      symbol: '🔮',
+      image: '/tarot/wonder.jpg',
+      arcana: 'The Seeker',
+      subtitle: 'Philosophy begins in wonder',
+      keywords: ['Curiosity', 'Awe', 'Humility', 'Beauty', 'Mystery'],
+      glowColor: '#a855f7',
+      essence: 'Wonder is the capacity for curiosity, astonishment, and the appreciation of beauty and complexity. It invokes humility before the vast mystery of existence. Philosophy begins here — not in dogma, but in the radical openness to what is. Wonder dissolves the calcified certainties that bind us to small selves and opens pathways to the infinite.',
+      virtues: [
+        { name: 'Curiosity', description: 'An insatiable desire to understand, explore, and discover the hidden depths of reality.' },
+        { name: 'Awe', description: 'The capacity to be moved by beauty, vastness, and the incomprehensible mystery of being.' },
+        { name: 'Humility', description: 'Recognition that our knowledge is a small island in an infinite sea of unknowing.' },
+        { name: 'Openness', description: 'Willingness to encounter the new, the strange, and the transformative without defense.' },
+      ],
+      quote: {
+        text: 'Consciousness asleep worships phantoms, fleeting idols born of delusion. But awakened, each mind beholds the divine within.',
+        source: 'WHOLE Scripture § 3',
+      },
+      practices: [
+        'Cultivate beginner\'s mind — approach the familiar as if seeing it for the first time',
+        'Spend time in contemplation of natural beauty and cosmic vastness',
+        'Read widely across domains — science, philosophy, art, mythology',
+        'Practice meditation to dissolve habitual perception',
+        'Keep a wonder journal documenting moments of awe',
+      ],
+      shadow: 'When wonder becomes mere escapism or spiritual bypassing, it loses its transformative power. Wonder must be grounded in honest engagement with reality, not flight from it.',
+    },
+    {
+      letter: 'H',
+      name: 'Honesty',
+      symbol: '⚖️',
+      image: '/tarot/honesty.jpg',
+      arcana: 'The Mirror',
+      subtitle: 'Truth as liberation from delusion',
+      keywords: ['Truthfulness', 'Authenticity', 'Transparency', 'Integrity', 'Self-knowledge'],
+      glowColor: '#3b82f6',
+      essence: 'Honesty is truthfulness, transparency, and sincerity in all dealings — with others and oneself. It is the inoculation against ideology and the foundation of genuine introspection. Without honesty, all spiritual paths become mere performances. Honesty strips away the masks we wear, revealing the raw material from which authentic selfhood is forged.',
+      virtues: [
+        { name: 'Truthfulness', description: 'Commitment to speaking and living in accordance with reality as it actually is.' },
+        { name: 'Authenticity', description: 'Alignment between one\'s inner experience and outer expression.' },
+        { name: 'Transparency', description: 'Willingness to be seen, known, and held accountable.' },
+        { name: 'Self-honesty', description: 'The courage to face one\'s shadows, limitations, and self-deceptions.' },
+      ],
+      quote: {
+        text: 'Fractured fragments longing for perfection forsake the fertile soil of wholeness. In embracing the meandering way of integrity, the path reveals a living terrain.',
+        source: 'WHOLE Scripture § 24',
+      },
+      practices: [
+        'Practice radical self-inquiry — question your motives, assumptions, and beliefs',
+        'Seek feedback from trusted others who will tell you hard truths',
+        'Keep a shadow journal documenting self-deceptions as you notice them',
+        'Engage in practices that reveal unconscious patterns (therapy, analysis, circling)',
+        'Cultivate the courage to speak uncomfortable truths with compassion',
+      ],
+      shadow: 'Honesty weaponized becomes cruelty. Truth without wisdom and compassion can harm. The shadow of honesty is using truth as a bludgeon rather than a lamp.',
+    },
+    {
+      letter: 'O',
+      name: 'Orthobiosis',
+      symbol: '🌿',
+      image: '/tarot/orthobiosis.jpg',
+      arcana: 'The Gardener',
+      subtitle: 'Right living aligned with Life',
+      keywords: ['Health', 'Vitality', 'Alignment', 'Flow', 'Embodiment'],
+      glowColor: '#22c55e',
+      essence: 'Orthobiosis is right living aimed at optimal health — not merely freedom from ailments, but the active practice of aligning oneself with the patterns and principles of Life itself. It recognizes that the body is the temple of consciousness, and that physical vitality is inseparable from spiritual flourishing. Orthobiosis is the art of living in harmony with natural law.',
+      virtues: [
+        { name: 'Vitality', description: 'Abundant life energy expressed through vibrant health and enthusiasm.' },
+        { name: 'Discipline', description: 'Consistent practice of health-promoting behaviors.' },
+        { name: 'Attunement', description: 'Sensitivity to the body\'s signals and needs.' },
+        { name: 'Balance', description: 'Harmonious integration of activity and rest, stimulation and calm.' },
+      ],
+      quote: {
+        text: 'The purpose of creation is not to serve you, but for you to serve creation by fully becoming you.',
+        source: 'WHOLE Scripture § 14',
+      },
+      practices: [
+        'Move the body daily — dance, train, stretch, play',
+        'Eat in ways that enhance rather than diminish vitality',
+        'Prioritize sleep as sacred recovery time',
+        'Spend time in nature, syncing with natural rhythms',
+        'Practice breathwork and embodiment exercises',
+        'Cultivate flow states through skilled engagement',
+      ],
+      shadow: 'Orthobiosis becomes neurotic when health optimization becomes an end in itself. Orthorexia, exercise addiction, and biohacking obsession are shadows of this value.',
+    },
+    {
+      letter: 'L',
+      name: 'Life',
+      symbol: '🔥',
+      image: '/tarot/life.jpg',
+      arcana: 'The Flame',
+      subtitle: 'The singular intrinsic value',
+      keywords: ['Will to Power', 'Amor Fati', 'Affirmation', 'Creativity', 'Becoming'],
+      glowColor: '#f59e0b',
+      essence: 'Life is the singular intrinsic value — self-potentiating, self-actualizing creativity in its purest form. It is the will to power understood not as domination but as the drive toward growth, expression, and self-overcoming. Life embraces amor fati — love of fate — and the Dionysian affirmation of existence in all its beauty and terror.',
+      virtues: [
+        { name: 'Affirmation', description: 'Saying yes to existence with all its suffering and joy.' },
+        { name: 'Creativity', description: 'The drive to bring new forms, meanings, and values into being.' },
+        { name: 'Courage', description: 'The willingness to face fear, uncertainty, and the unknown.' },
+        { name: 'Passion', description: 'Intense engagement with life, burning brightly rather than smoldering.' },
+      ],
+      quote: {
+        text: 'My god is no "he", no "it", but a verb, a ceaseless process. When you journey the path of individuation, striving to actualize your healthiest potential, you are worshipping the truest god.',
+        source: 'WHOLE Scripture § 53',
+      },
+      practices: [
+        'Say yes to challenges that stretch your capacities',
+        'Create — art, projects, relationships, meaning',
+        'Practice amor fati with difficult circumstances',
+        'Cultivate intensity and passion in your pursuits',
+        'Dance with chaos rather than fleeing from it',
+        'Embrace the full spectrum of human emotion',
+      ],
+      shadow: 'Life affirmation without wisdom becomes reckless hedonism or destructive excess. The shadow is saying yes to impulses that ultimately diminish rather than enhance life.',
+    },
+    {
+      letter: 'E',
+      name: 'Entelechy',
+      symbol: '🦋',
+      image: '/tarot/entelechy.jpg',
+      arcana: 'The Chrysalis',
+      subtitle: 'Active actualization of potential',
+      keywords: ['Individuation', 'Self-mastery', 'Becoming', 'Integration', 'Teleology'],
+      glowColor: '#ec4899',
+      essence: 'Entelechy is the active actualization of potential — the process of maturation, character development, and self-mastery. It is the telos drawing us toward our most complete expression. Entelechy recognizes that we are not fixed beings but processes of becoming. The acorn contains the oak; the human contains the sage. Entelechy is the endless unfolding toward what we might become.',
+      virtues: [
+        { name: 'Growth', description: 'Continuous expansion of capacities, understanding, and being.' },
+        { name: 'Integration', description: 'Harmonizing disparate aspects of self into coherent wholeness.' },
+        { name: 'Self-mastery', description: 'Command over one\'s impulses, reactions, and habitual patterns.' },
+        { name: 'Perseverance', description: 'Sustained effort toward long-term development despite obstacles.' },
+      ],
+      quote: {
+        text: 'When your unique ode rings loud, you amplify existence itself.',
+        source: 'WHOLE Scripture § 14',
+      },
+      practices: [
+        'Identify your highest potential and work toward it systematically',
+        'Practice shadow integration through Jungian techniques',
+        'Set meaningful goals and track progress',
+        'Seek mentorship from those further along the path',
+        'Embrace discomfort as the catalyst for growth',
+        'Regular reflection on who you are becoming',
+      ],
+      shadow: 'Entelechy becomes toxic when it manifests as perfectionism, self-rejection, or endless striving without presence. The shadow is never arriving, never being enough.',
+    },
   ]
 
   return (
@@ -789,67 +1230,33 @@ function ValuesSection() {
           </div>
         </RevealOnScroll>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {values.map((value, index) => (
-            <RevealOnScroll
-              key={value.name}
-              delay={index * 100}
-              className={index === 4 ? 'md:col-span-2 lg:col-span-1' : ''}
-            >
-              {({ isInView }) => (
-                <div className="group relative h-full w-full" role="article" tabIndex={0}>
-                  {/* Animated Conic Border Gradient */}
-                  <div
-                    className="absolute -inset-[1px] rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm animate-border-spin"
-                    style={{
-                      background: 'conic-gradient(from var(--angle, 0deg) at 50% 50%, transparent 0%, transparent 70%, #C9A84C 85%, transparent 100%)',
-                    }}
-                  />
-
-                  {/* Main Card Container */}
-                  <div className="relative h-full rounded-2xl bg-[#0a0a0f] p-[1px] overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-2 group-hover:scale-[1.01]">
-
-                    {/* Inner Content Surface */}
-                    <div className="relative h-full rounded-2xl bg-void/90 p-6 md:p-8 flex flex-col overflow-hidden min-h-[280px]">
-
-                      {/* Ambient Noise Texture */}
-                      <div className="absolute inset-0 bg-noise opacity-30 pointer-events-none mix-blend-overlay" />
-
-                      {/* Top Light Leak Effect */}
-                      <div className="absolute -top-24 -right-24 w-48 h-48 bg-gold/10 blur-[80px] rounded-full group-hover:bg-gold/25 transition-colors duration-700" />
-
-                      {/* Large Letter with Ink Trap depth effect */}
-                      <div className="absolute -right-2 -top-2 font-display text-[7rem] md:text-[8rem] leading-none font-bold text-transparent bg-clip-text bg-gradient-to-b from-white/[0.03] to-transparent select-none transition-all duration-700 group-hover:scale-110 group-hover:from-gold/10">
-                        {value.letter}
-                      </div>
-
-                      {/* Content */}
-                      <div className="relative z-10 flex-1 flex flex-col">
-                        <h3 className="font-display text-xl md:text-2xl text-cream mb-3 md:mb-4 mt-6 md:mt-8 inline-flex items-center gap-3">
-                          <span className="w-6 md:w-8 h-[1px] bg-gold/50 group-hover:w-10 md:group-hover:w-12 transition-all duration-500" />
-                          <span className="group-hover:text-gold transition-colors duration-300">
-                            <DecodingText text={value.name} isVisible={isInView} />
-                          </span>
-                        </h3>
-
-                        <p className="font-body text-sm md:text-base text-cream/60 leading-relaxed group-hover:text-cream/80 transition-colors duration-500">
-                          {value.description}
-                        </p>
-                      </div>
-
-                      {/* Bottom Interactive Indicator */}
-                      <div className="mt-auto pt-6 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
-                        <span className="text-xs font-display tracking-widest text-gold uppercase">Discover</span>
-                        <div className="h-[1px] w-8 bg-gold" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+        {/* Tarot Cards Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
+          {tarotCards.map((card, index) => (
+            <RevealOnScroll key={card.name} delay={index * 100}>
+              <TarotCard
+                card={card}
+                index={index}
+                onClick={() => setSelectedCard(card)}
+              />
             </RevealOnScroll>
           ))}
         </div>
+
+        {/* Hint text */}
+        <RevealOnScroll delay={600}>
+          <p className="text-center mt-8 text-cream/30 text-sm font-body">
+            Click a card to reveal its mysteries
+          </p>
+        </RevealOnScroll>
       </div>
+
+      {/* Tarot Modal */}
+      <TarotModal
+        isOpen={!!selectedCard}
+        onClose={() => setSelectedCard(null)}
+        card={selectedCard}
+      />
     </section>
   )
 }
