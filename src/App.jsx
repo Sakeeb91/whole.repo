@@ -755,6 +755,19 @@ function TarotModal({ isOpen, onClose, card }) {
 // Tarot Card Component
 function TarotCard({ card, onClick, index }) {
   const [isHovered, setIsHovered] = useState(false)
+  const videoRef = useRef(null)
+
+  // Play/pause video on hover
+  useEffect(() => {
+    if (videoRef.current && card.video) {
+      if (isHovered) {
+        videoRef.current.play().catch(() => {})
+      } else {
+        videoRef.current.pause()
+        videoRef.current.currentTime = 0
+      }
+    }
+  }, [isHovered, card.video])
 
   return (
     <div
@@ -819,14 +832,29 @@ function TarotCard({ card, onClick, index }) {
 
           {/* Illustration Area */}
           <div className="absolute inset-x-6 top-12 bottom-24 rounded-lg overflow-hidden">
-            {/* Generated Image */}
+            {/* Static Image (poster) */}
             {card.image && (
               <img
                 src={card.image}
                 alt={`${card.name} tarot illustration`}
-                className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
+                className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-105 ${card.video ? (isHovered ? 'opacity-0' : 'opacity-100') : ''}`}
                 style={{
-                  filter: isHovered ? 'brightness(1.1) saturate(1.2)' : 'brightness(0.9)',
+                  filter: isHovered && !card.video ? 'brightness(1.1) saturate(1.2)' : 'brightness(0.9)',
+                }}
+              />
+            )}
+
+            {/* Video (plays on hover) */}
+            {card.video && (
+              <video
+                ref={videoRef}
+                src={card.video}
+                muted
+                loop
+                playsInline
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+                style={{
+                  filter: 'brightness(1.1) saturate(1.2)',
                 }}
               />
             )}
@@ -1468,6 +1496,7 @@ function ValuesSection() {
       name: 'Wonder',
       symbol: '🔮',
       image: '/tarot/wonder.jpg',
+      video: '/tarot/wonder.mp4',
       arcana: 'The Seeker',
       subtitle: 'Philosophy begins in wonder',
       keywords: ['Curiosity', 'Awe', 'Humility', 'Beauty', 'Mystery'],
@@ -1497,6 +1526,7 @@ function ValuesSection() {
       name: 'Honesty',
       symbol: '⚖️',
       image: '/tarot/honesty.jpg',
+      video: '/tarot/honesty.mp4',
       arcana: 'The Mirror',
       subtitle: 'Truth as liberation from delusion',
       keywords: ['Truthfulness', 'Authenticity', 'Transparency', 'Integrity', 'Self-knowledge'],
@@ -1526,6 +1556,7 @@ function ValuesSection() {
       name: 'Orthobiosis',
       symbol: '🌿',
       image: '/tarot/orthobiosis.jpg',
+      video: '/tarot/orthobiosis.mp4',
       arcana: 'The Gardener',
       subtitle: 'Right living aligned with Life',
       keywords: ['Health', 'Vitality', 'Alignment', 'Flow', 'Embodiment'],
@@ -1556,6 +1587,7 @@ function ValuesSection() {
       name: 'Life',
       symbol: '🔥',
       image: '/tarot/life.jpg',
+      video: '/tarot/life.mp4',
       arcana: 'The Flame',
       subtitle: 'The singular intrinsic value',
       keywords: ['Will to Power', 'Amor Fati', 'Affirmation', 'Creativity', 'Becoming'],
@@ -1586,6 +1618,7 @@ function ValuesSection() {
       name: 'Entelechy',
       symbol: '🦋',
       image: '/tarot/entelechy.jpg',
+      video: '/tarot/entelechy.mp4',
       arcana: 'The Chrysalis',
       subtitle: 'Active actualization of potential',
       keywords: ['Individuation', 'Self-mastery', 'Becoming', 'Integration', 'Teleology'],
